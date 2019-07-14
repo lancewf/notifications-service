@@ -1,0 +1,79 @@
+hab pkg install chef/ci-studio-common >/dev/null
+source "$(hab pkg path chef/ci-studio-common)/bin/studio-common"
+
+# This removes the visual mode when select text with the mouse in vim. 
+echo "set mouse-=a" >> ~/.vimrc
+
+install_if_missing core/curl curl
+
+PORT=8080
+SERVICE_NAME="notifications-service"
+
+function htop() {
+  install_if_missing core/which which;
+  install_if_missing core/htop htop
+  TOOL_BIN=$(which htop 2>/dev/null);
+  eval $TOOL_BIN $@
+}
+
+function start() {
+  install_if_missing core/busybox-static netstat
+  netstat -an | grep $PORT | grep LISTEN >/dev/null 2>/dev/null
+  if [ $? == 0 ]; then
+    echo "already running";
+    return;
+  fi
+
+  build
+
+  start_sup
+
+  echo "starting $HAB_ORIGIN/$SERVICE_NAME"
+
+  hab svc load $HAB_ORIGIN/$SERVICE_NAME
+
+  wait_or_fail_for_port_to_listen $PORT
+}
+
+function rebuild() {
+  build
+  hab svc unload $HAB_ORIGIN/$SERVICE_NAME
+  sleep 3
+  hab svc load $HAB_ORIGIN/$SERVICE_NAME
+}
+
+function start_sup() {
+  load_dev_config
+  hab sup status 2>/dev/null 1>&2
+  [[ $? == 0 ]] && return
+  mkdir -p /hab/sup/default
+  echo "=> Launching the Habitat Supervisor in the background..."
+  hab sup run $* > /hab/sup/default/sup.log &
+  while : ; do
+    hab sup status >/dev/null
+    [[ $? -eq 0 ]] && break || sleep 1
+  done
+}
+
+function status() {
+ hab sup status;
+}
+
+# Saves the in memory bash history to a file
+function save_history() {
+  history -a /src/.bash_history
+}
+
+# if .studiorc is being sourced from an already running studio, don't reset bash
+# history -- this is achieved by saving the current history before it is re-read
+save_history
+
+# Load the bash history from a file
+history -r /src/.bash_history
+
+function cleanup() {
+    save_history
+}
+
+# When exiting the studio save the bash history to a file
+trap cleanup EXIT
