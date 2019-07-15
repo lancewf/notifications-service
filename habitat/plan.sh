@@ -28,4 +28,5 @@ scaffolding_go_build_deps=(
  github.com/sirupsen/logrus
  github.com/spf13/cobra
  github.com/spf13/viper
+ github.com/buger/jsonparser
 )

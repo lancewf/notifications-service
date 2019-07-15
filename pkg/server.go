@@ -2,9 +2,11 @@ package pkg
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"sync"
 
+	"github.com/lancewf/notifications-service/pkg/run"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -20,14 +22,29 @@ func New(port int) Server {
 }
 
 func (server Server) Start() {
-	mutex := sync.Mutex{}
+	mutexCCR := sync.Mutex{}
+	mutexInspec := sync.Mutex{}
 
-	http.HandleFunc("/run", func(w http.ResponseWriter, r *http.Request) {
-		mutex.Lock()
-		defer mutex.Unlock()
+	http.HandleFunc("/ccr_runs", func(w http.ResponseWriter, r *http.Request) {
+		mutexCCR.Lock()
+		defer mutexCCR.Unlock()
 
 		if r.Method == "POST" {
 			log.Info("run POST")
+			body, err := ioutil.ReadAll(r.Body)
+			if err != nil {
+				log.WithError(err).Warn("Could not read body")
+				return
+			}
+
+			run := run.ParseRun(body)
+
+			log.Infof("run %v", run)
+
+			if run.SendNotification() {
+				log.Infof("Send alert")
+			}
+
 			w.Header().Set("Content-Type", "application/javascript")
 			w.Write([]byte("{}"))
 		} else if r.Method == "GET" {
@@ -39,11 +56,11 @@ func (server Server) Start() {
 		} else {
 			log.Info("Unhandled")
 		}
-
 	})
-	http.HandleFunc("/inspec", func(w http.ResponseWriter, r *http.Request) {
-		mutex.Lock()
-		defer mutex.Unlock()
+
+	http.HandleFunc("/inspec_reports", func(w http.ResponseWriter, r *http.Request) {
+		mutexInspec.Lock()
+		defer mutexInspec.Unlock()
 
 		if r.Method == "POST" {
 			log.Info("inspec POST")

@@ -37,9 +37,28 @@ function start() {
 
 function rebuild() {
   build
+  if [ $? != 0 ]; then
+    echo "build Faild";
+    return;
+  fi
   hab svc unload $HAB_ORIGIN/$SERVICE_NAME
   sleep 3
   hab svc load $HAB_ORIGIN/$SERVICE_NAME
+}
+
+function send_ccr_example() {
+  install_if_missing core/curl curl
+  install_if_missing core/jq-static jq
+
+  local examples_json_path=${JSON_FILE:-/src/pkg/examples/converge-success-report.json};
+  local endpoint="http://localhost:$PORT/ccr_runs"
+  local uuid=$(uuidgen)
+  local entity_uuid=$(uuidgen)
+
+  tmp_ccr_json="$(jq --arg id "$uuid" '.id = $id' <$examples_json_path)"
+  tmp_ccr_json="$(echo $tmp_ccr_json | jq --arg id "$entity_uuid" '.entity_uuid = $id')"
+
+  echo "$tmp_ccr_json" | curl --data "@-" $endpoint
 }
 
 function start_sup() {
