@@ -3,4 +3,10 @@ host = "localhost"
 port = 8080
 
 [webhook]
-url = "http://example.com"
+url = ""
+
+[ifttt_webhook]
+url = ""
+
+[slack_webhook]
+url = ""

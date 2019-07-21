@@ -34,6 +34,14 @@ func (report Report) WebHookMessage() string {
 	return "Failed InSpec Report!"
 }
 
+func (report Report) IFTTTWebHookMessage() string {
+	return "{\"value1\" : \"InSpec\", \"value2\" : \"profile names\", \"value3\" : \"whale-server\"}"
+}
+
+func (report Report) SlackWebhookMessage() string {
+	return "{\"text\": \"Failed InSpec Report!\"}"
+}
+
 func (report Report) failedProfiles(impact float32) []Profile {
 	profiles := make([]Profile, 0)
 	for _, profile := range report.Profiles {

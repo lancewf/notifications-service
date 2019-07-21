@@ -8,3 +8,9 @@ port = {{cfg.service.port}}
 
 [webhook]
 url = "{{cfg.webhook.url}}"
+
+[ifttt_webhook]
+url = "{{cfg.ifttt_webhook.url}}"
+
+[slack_webhook]
+url = "{{cfg.slack_webhook.url}}"

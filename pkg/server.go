@@ -16,6 +16,8 @@ import (
 type NotificationReport interface {
 	HasNotificationToSend() bool
 	WebHookMessage() string
+	IFTTTWebHookMessage() string
+	SlackWebhookMessage() string
 }
 
 // Server
@@ -24,6 +26,7 @@ type Server struct {
 }
 
 func New(config *config.NotificationsConfig) Server {
+	log.Infof("Created server with %v", config)
 	return Server{
 		config: config,
 	}
@@ -96,11 +99,32 @@ func (server Server) Start() {
 
 func (server Server) SendNotification(report NotificationReport) {
 	if report.HasNotificationToSend() {
-		log.Infof("Send alert")
-		_, err := http.Post(server.config.Webhook.URL,
-			"application/json", bytes.NewBuffer([]byte(report.WebHookMessage())))
-		if err != nil {
-			log.Error("Failed to send report")
+
+		if server.config.Webhook.URL != "" {
+			log.Infof("Send webhook alert")
+			_, err := http.Post(server.config.Webhook.URL,
+				"application/json", bytes.NewBuffer([]byte(report.WebHookMessage())))
+			if err != nil {
+				log.Error("Failed to send report")
+			}
+		}
+
+		if server.config.IFTTTWebhook.URL != "" {
+			log.Infof("Send IFTTT webhook alert")
+			_, err := http.Post(server.config.IFTTTWebhook.URL,
+				"application/json", bytes.NewBuffer([]byte(report.IFTTTWebHookMessage())))
+			if err != nil {
+				log.Error("Failed to send report")
+			}
+		}
+
+		if server.config.SlackWebhook.URL != "" {
+			log.Infof("Send Slack webhook alert")
+			_, err := http.Post(server.config.SlackWebhook.URL,
+				"application/json", bytes.NewBuffer([]byte(report.SlackWebhookMessage())))
+			if err != nil {
+				log.Error("Failed to send report")
+			}
 		}
 	}
 }
