@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/lancewf/notifications-service/pkg/config"
 	"github.com/lancewf/notifications-service/pkg/inspec"
 	"github.com/lancewf/notifications-service/pkg/run"
 	log "github.com/sirupsen/logrus"
@@ -19,12 +20,12 @@ type NotificationReport interface {
 
 // Server
 type Server struct {
-	port int
+	config *config.NotificationsConfig
 }
 
-func New(port int) Server {
+func New(config *config.NotificationsConfig) Server {
 	return Server{
-		port: port,
+		config: config,
 	}
 }
 
@@ -90,13 +91,13 @@ func (server Server) Start() {
 		}
 
 	})
-	http.ListenAndServe(fmt.Sprintf(":%d", server.port), nil)
+	http.ListenAndServe(fmt.Sprintf(":%d", server.config.Service.Port), nil)
 }
 
 func (server Server) SendNotification(report NotificationReport) {
 	if report.HasNotificationToSend() {
 		log.Infof("Send alert")
-		_, err := http.Post("http://requestbin.sjcmmsn.com/vlek6mvl",
+		_, err := http.Post(server.config.Webhook.URL,
 			"application/json", bytes.NewBuffer([]byte(report.WebHookMessage())))
 		if err != nil {
 			log.Error("Failed to send report")

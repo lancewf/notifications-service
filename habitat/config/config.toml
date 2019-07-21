@@ -5,3 +5,6 @@ host = "{{cfg.service.host}}"
 host = "{{sys.ip}}"
 {{~/if}}
 port = {{cfg.service.port}}
+
+[webhook]
+url = "{{cfg.webhook.url}}"

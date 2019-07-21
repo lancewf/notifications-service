@@ -1,3 +1,6 @@
 [service]
 host = "localhost"
 port = 8080
+
+[webhook]
+url = "http://example.com"

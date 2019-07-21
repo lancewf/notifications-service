@@ -2,8 +2,10 @@ package commands
 
 import (
 	"github.com/lancewf/notifications-service/pkg"
+	"github.com/lancewf/notifications-service/pkg/config"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // Config defines the available configuration options
@@ -17,7 +19,13 @@ var serveCmd = &cobra.Command{
 	Short: "Launches Notifications services",
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Info("Starting Notification Service")
-		server := pkg.New(8080)
+		conf, err := configFromViper()
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error": err.Error(),
+			}).Fatal("Failed to load config")
+		}
+		server := pkg.New(conf)
 
 		server.Start()
 	},
@@ -25,4 +33,15 @@ var serveCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(serveCmd)
+}
+
+func configFromViper() (*config.NotificationsConfig, error) {
+	cfg := &config.NotificationsConfig{}
+	if err := viper.Unmarshal(cfg); err != nil {
+		log.WithFields(log.Fields{
+			"error": err.Error(),
+		}).Fatal("Failed to marshal config options to server config")
+	}
+
+	return cfg, nil
 }
