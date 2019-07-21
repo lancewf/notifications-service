@@ -9,8 +9,12 @@ type Run struct {
 	Status  string
 }
 
-func (run Run) SendNotification() bool {
+func (run Run) HasNotificationToSend() bool {
 	return run.Status == "failure" && run.Message == "run_converge"
+}
+
+func (run Run) WebHookMessage() string {
+	return "Failed Chef Client Run Report!"
 }
 
 func ParseRun(message []byte) Run {
