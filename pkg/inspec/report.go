@@ -51,6 +51,12 @@ type SlackField struct {
 	Short bool   `json:"short"`
 }
 
+type IFTTTMessage struct {
+	Value1 string `json:"value1"`
+	Value2 string `json:"value2"`
+	Value3 string `json:"value3"`
+}
+
 func ParseReport(rawReport []byte, minImpact float32) Report {
 	profiles := getProfiles(rawReport)
 	return Report{
@@ -70,7 +76,33 @@ func (report Report) WebHookMessage() string {
 }
 
 func (report Report) IFTTTWebHookMessage() string {
-	return "{\"value1\" : \"InSpec\", \"value2\" : \"profile names\", \"value3\" : \"whale-server\"}"
+	failedProfilesName := "<None>"
+	failedControlInfo := "<None>"
+	failedProfiles := report.failedProfiles(0.0)
+	if len(failedProfiles) > 0 {
+		failedProfile := failedProfiles[0]
+		failedProfilesName = failedProfile.Name
+
+		failedControls := failedProfile.failedControls(0.0)
+		if len(failedControls) > 0 {
+			failedControl := failedControls[0]
+			failedControlInfo = fmt.Sprintf("%s:%s", failedControl.ID, failedControl.Title)
+		}
+	}
+
+	msg := IFTTTMessage{
+		Value1: failedProfilesName,
+		Value2: failedControlInfo,
+		Value3: fmt.Sprintf("%d", report.numberOfFailedTests()),
+	}
+
+	JSONRaw, err := json.Marshal(msg)
+	if err != nil {
+		log.Errorf("Error parsing message %v", err)
+		return ""
+	}
+
+	return string(JSONRaw)
 }
 
 func (report Report) SlackWebhookMessage() string {
