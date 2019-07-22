@@ -14,3 +14,6 @@ url = "{{cfg.ifttt_webhook.url}}"
 
 [slack_webhook]
 url = "{{cfg.slack_webhook.url}}"
+
+[inspec]
+min_impact_to_notify = {{cfg.inspec.min_impact_to_notify}}

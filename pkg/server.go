@@ -33,6 +33,7 @@ func New(config *config.NotificationsConfig) Server {
 }
 
 func (server Server) Start() {
+	log.Infof("server.config.Inspec.MinImpact %f", server.config.Inspec.MinImpact)
 	mutexCCR := sync.Mutex{}
 	mutexInspec := sync.Mutex{}
 
@@ -77,7 +78,7 @@ func (server Server) Start() {
 				return
 			}
 
-			report := inspec.ParseReport(body)
+			report := inspec.ParseReport(body, server.config.Inspec.MinImpact)
 
 			server.SendNotification(report)
 

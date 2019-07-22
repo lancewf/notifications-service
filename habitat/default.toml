@@ -10,3 +10,6 @@ url = ""
 
 [slack_webhook]
 url = ""
+
+[inspec]
+min_impact_to_notify = 0.7

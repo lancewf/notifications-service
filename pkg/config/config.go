@@ -5,6 +5,7 @@ type NotificationsConfig struct {
 	Webhook      `mapstructure:"webhook"`
 	IFTTTWebhook `mapstructure:"ifttt_webhook"`
 	SlackWebhook `mapstructure:"slack_webhook"`
+	Inspec       `mapstructure:"inspec"`
 }
 
 type Service struct {
@@ -22,4 +23,8 @@ type IFTTTWebhook struct {
 
 type SlackWebhook struct {
 	URL string `mapstructure:"url"`
+}
+
+type Inspec struct {
+	MinImpact float32 `mapstructure:"min_impact_to_notify"`
 }
