@@ -13,3 +13,8 @@ url = ""
 
 [inspec]
 min_impact_to_notify = 0.7
+
+[automate]
+enable_forwarding = false
+url = "https://<autmoate>/data-collector/v0"
+token = "<token>"

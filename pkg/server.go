@@ -49,9 +49,10 @@ func (server Server) Start() {
 				return
 			}
 
+			server.forwardToAutomate(body)
 			run := run.ParseRun(body)
 
-			server.SendNotification(run)
+			server.sendNotification(run)
 
 			w.Header().Set("Content-Type", "application/javascript")
 			w.Write([]byte("{}"))
@@ -77,10 +78,10 @@ func (server Server) Start() {
 				log.WithError(err).Warn("Could not read body")
 				return
 			}
+			server.forwardToAutomate(body)
 
 			report := inspec.ParseReport(body, server.config.Inspec.MinImpact)
-
-			server.SendNotification(report)
+			server.sendNotification(report)
 
 			w.Header().Set("Content-Type", "application/javascript")
 			w.Write([]byte("{}"))
@@ -98,7 +99,26 @@ func (server Server) Start() {
 	http.ListenAndServe(fmt.Sprintf(":%d", server.config.Service.Port), nil)
 }
 
-func (server Server) SendNotification(report NotificationReport) {
+func (server Server) forwardToAutomate(body []byte) {
+	if server.config.Automate.EnableForwarding {
+		log.Infof("Forwarding to Automate")
+		request, err := http.NewRequest("POST", server.config.Automate.URL, bytes.NewBuffer(body))
+		if err != nil {
+			log.Errorf("Failed to forward to Automate %v", err)
+			return
+		}
+		request.Header.Set("Content-Type", "application/json")
+		request.Header.Set("api-token", server.config.Automate.Token)
+
+		response, err := http.DefaultClient.Do(request)
+		if err != nil {
+			log.Errorf("Failed to forward to Automate %v", err)
+		}
+		log.Infof("Automate foward response status %q", response.Status)
+	}
+}
+
+func (server Server) sendNotification(report NotificationReport) {
 	if report.HasNotificationToSend() {
 
 		if server.config.Webhook.URL != "" {

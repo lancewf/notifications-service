@@ -78,6 +78,11 @@ function status() {
  hab sup status;
 }
 
+function create_config_file() {
+  mkdir -p /hab/user/$SERVICE_NAME/config/
+  touch /hab/user/$SERVICE_NAME/config/user.toml
+}
+
 # Saves the in memory bash history to a file
 function save_history() {
   history -a /src/.bash_history

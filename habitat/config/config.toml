@@ -17,3 +17,8 @@ url = "{{cfg.slack_webhook.url}}"
 
 [inspec]
 min_impact_to_notify = {{cfg.inspec.min_impact_to_notify}}
+
+[automate]
+enable_forwarding = {{cfg.automate.enable_forwarding}}
+url = "{{cfg.automate.url}}"
+token = "{{cfg.automate.token}}"
