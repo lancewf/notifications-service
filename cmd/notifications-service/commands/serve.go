@@ -19,15 +19,23 @@ var serveCmd = &cobra.Command{
 	Short: "Launches Notifications services",
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Info("Starting Notification Service")
+
 		conf, err := configFromViper()
 		if err != nil {
 			log.WithFields(log.Fields{
 				"error": err.Error(),
 			}).Fatal("Failed to load config")
 		}
-		server := pkg.New(conf)
 
-		server.Start()
+		configManager, err := config.NewManager(conf.ConfigFile)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error": err.Error(),
+			}).Fatal("Failed to create config manager")
+		}
+		defer configManager.Close()
+
+		pkg.New(conf, configManager).Start()
 	},
 }
 

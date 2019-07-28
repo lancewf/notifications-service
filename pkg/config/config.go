@@ -10,8 +10,9 @@ type NotificationsConfig struct {
 }
 
 type Service struct {
-	Host string `mapstructure:"host"`
-	Port int    `mapstructure:"port"`
+	Host       string `mapstructure:"host"`
+	Port       int    `mapstructure:"port"`
+	ConfigFile string `mapstructure:"config"`
 }
 
 type Webhook struct {

@@ -5,6 +5,7 @@ host = "{{cfg.service.host}}"
 host = "{{sys.ip}}"
 {{~/if}}
 port = {{cfg.service.port}}
+config = "{{pkg.svc_data_path}}/.notifications-service.toml"
 
 [webhook]
 url = "{{cfg.webhook.url}}"

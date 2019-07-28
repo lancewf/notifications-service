@@ -20,15 +20,16 @@ type NotificationReport interface {
 	SlackWebhookMessage() string
 }
 
-// Server
 type Server struct {
-	config *config.NotificationsConfig
+	config        *config.NotificationsConfig
+	configManager *config.Manager
 }
 
-func New(config *config.NotificationsConfig) Server {
+func New(config *config.NotificationsConfig, configManager *config.Manager) Server {
 	log.Infof("Created server with %v", config)
 	return Server{
-		config: config,
+		config:        config,
+		configManager: configManager,
 	}
 }
 
