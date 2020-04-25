@@ -27,15 +27,7 @@ var serveCmd = &cobra.Command{
 			}).Fatal("Failed to load config")
 		}
 
-		configManager, err := config.NewManager(conf.ConfigFile)
-		if err != nil {
-			log.WithFields(log.Fields{
-				"error": err.Error(),
-			}).Fatal("Failed to create config manager")
-		}
-		defer configManager.Close()
-
-		pkg.New(conf, configManager).Start()
+		pkg.New(conf).Start()
 	},
 }
 

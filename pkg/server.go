@@ -21,15 +21,13 @@ type NotificationReport interface {
 }
 
 type Server struct {
-	config        *config.NotificationsConfig
-	configManager *config.Manager
+	config *config.NotificationsConfig
 }
 
-func New(config *config.NotificationsConfig, configManager *config.Manager) Server {
+func New(config *config.NotificationsConfig) Server {
 	log.Infof("Created server with %v", config)
 	return Server{
-		config:        config,
-		configManager: configManager,
+		config: config,
 	}
 }
 
@@ -68,7 +66,7 @@ func (server Server) Start() {
 		}
 	})
 
-	http.HandleFunc("/inspec_reports", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/inspec_reports/data-collector/v0/", func(w http.ResponseWriter, r *http.Request) {
 		mutexInspec.Lock()
 		defer mutexInspec.Unlock()
 
