@@ -1,18 +1,19 @@
 package inspec
 
 import (
-	"encoding/json"
-	"fmt"
 	"github.com/buger/jsonparser"
 	"github.com/lancewf/notifications-service/pkg/util"
-	log "github.com/sirupsen/logrus"
 )
 
 type Report struct {
-	MinImpact float32
-	ID        string
-	NodeName  string
-	Profiles  []Profile
+	MinImpact           float32
+	ID                  string
+	NodeName            string
+	Profiles            []Profile
+	NotificationToSend  bool
+	WebHookMessage      string
+	IFTTTWebHookMessage string
+	SlackWebhookMessage string
 }
 
 type Profile struct {
@@ -68,100 +69,19 @@ func ParseReport(rawReport []byte, minImpact float32) Report {
 }
 
 func (report Report) HasNotificationToSend() bool {
-	return len(report.failedProfiles(0.0)) > 0
+	return report.NotificationToSend
 }
 
-func (report Report) WebHookMessage() string {
-	return "Failed InSpec Report!"
+func (report Report) GetWebHookMessage() string {
+	return report.WebHookMessage
 }
 
-func (report Report) IFTTTWebHookMessage() string {
-	failedProfilesName := "<None>"
-	failedControlInfo := "<None>"
-	failedProfiles := report.failedProfiles(0.0)
-	if len(failedProfiles) > 0 {
-		failedProfile := failedProfiles[0]
-		failedProfilesName = failedProfile.Name
-
-		failedControls := failedProfile.failedControls(0.0)
-		if len(failedControls) > 0 {
-			failedControl := failedControls[0]
-			failedControlInfo = fmt.Sprintf("%s:%s", failedControl.ID, failedControl.Title)
-		}
-	}
-
-	msg := IFTTTMessage{
-		Value1: failedProfilesName,
-		Value2: failedControlInfo,
-		Value3: fmt.Sprintf("%d", report.numberOfFailedTests()),
-	}
-
-	JSONRaw, err := json.Marshal(msg)
-	if err != nil {
-		log.Errorf("Error parsing message %v", err)
-		return ""
-	}
-
-	return string(JSONRaw)
+func (report Report) GetIFTTTWebHookMessage() string {
+	return report.IFTTTWebHookMessage
 }
 
-func (report Report) SlackWebhookMessage() string {
-	failedProfilesName := "<None>"
-	failedControlInfo := "<None>"
-	failedProfiles := report.failedProfiles(0.0)
-	if len(failedProfiles) > 0 {
-		failedProfile := failedProfiles[0]
-		failedProfilesName = failedProfile.Name
-
-		failedControls := failedProfile.failedControls(0.0)
-		if len(failedControls) > 0 {
-			failedControl := failedControls[0]
-			failedControlInfo = fmt.Sprintf("%s:%s", failedControl.ID, failedControl.Title)
-		}
-	}
-
-	msg := SlackMessage{
-		Username: "Notification Service",
-		Text:     fmt.Sprintf("InSpec found a critical control failure on node %q", report.NodeName),
-		IconURL:  "https://docs.chef.io/_static/chef_logo_v2.png",
-		Attachments: []SlackAttachment{
-			{
-				Text: fmt.Sprintf("%d tests failed. Rerun the test locally for full details.",
-					report.numberOfFailedTests()),
-				Color: "warning",
-				Fields: []SlackField{
-					{
-						Title: "Control ID::Title",
-						Value: failedControlInfo,
-						Short: false,
-					},
-					{
-						Title: "Profile",
-						Value: failedProfilesName,
-						Short: false,
-					},
-					{
-						Title: "Node",
-						Value: report.NodeName,
-						Short: false,
-					},
-					{
-						Title: "Highest Failed Impact",
-						Value: fmt.Sprintf("%.1f", report.highestFailedImpact()),
-						Short: false,
-					},
-				},
-			},
-		},
-	}
-
-	JSONRaw, err := json.Marshal(msg)
-	if err != nil {
-		log.Errorf("Error parsing message %v", err)
-		return fmt.Sprintf("{\"text\": \"%s\"}", "Error")
-	}
-
-	return string(JSONRaw)
+func (report Report) GetSlackWebhookMessage() string {
+	return report.SlackWebhookMessage
 }
 
 func (report Report) numberOfFailedTests() int {

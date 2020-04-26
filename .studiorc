@@ -46,19 +46,35 @@ function rebuild() {
   hab svc load $HAB_ORIGIN/$SERVICE_NAME
 }
 
-function send_ccr_example() {
+function send_success_example() {
   install_if_missing core/curl curl
   install_if_missing core/jq-static jq
 
-  local examples_json_path=${JSON_FILE:-/src/pkg/examples/converge-success-report.json};
-  local endpoint="http://localhost:$PORT/ccr_runs"
+  local examples_json_path="/src/pkg/examples/compliance-success-tiny-report.json"
+  local endpoint="http://localhost:$PORT/inspec_reports/data-collector/v0/"
   local uuid=$(uuidgen)
   local entity_uuid=$(uuidgen)
+  local date=$(date --rfc-3339=seconds | sed 's/ /T/' | sed 's/\+.*/Z/')
 
-  tmp_ccr_json="$(jq --arg id "$uuid" '.id = $id' <$examples_json_path)"
-  tmp_ccr_json="$(echo $tmp_ccr_json | jq --arg id "$entity_uuid" '.entity_uuid = $id')"
+  tmp_report_json="$(jq --arg date "$date" --arg id "$uuid" --arg nodeid "$entity_uuid" '.report_uuid = $id | .node_uuid = $nodeid | .end_time = $date' <$examples_json_path)"
 
-  echo "$tmp_ccr_json" | curl --data "@-" $endpoint
+  echo "$tmp_report_json" | curl --data "@-" $endpoint
+}
+
+
+function send_failure_example() {
+  install_if_missing core/curl curl
+  install_if_missing core/jq-static jq
+
+  local examples_json_path="/src/pkg/examples/compliance-failure-big-report.json"
+  local endpoint="http://localhost:$PORT/inspec_reports/data-collector/v0/"
+  local uuid=$(uuidgen)
+  local entity_uuid=$(uuidgen)
+  local date=$(date --rfc-3339=seconds | sed 's/ /T/' | sed 's/\+.*/Z/')
+
+  tmp_report_json="$(jq --arg date "$date" --arg id "$uuid" --arg nodeid "$entity_uuid" '.report_uuid = $id | .node_uuid = $nodeid | .end_time = $date' <$examples_json_path)"
+
+  echo "$tmp_report_json" | curl --data "@-" $endpoint
 }
 
 function start_sup() {

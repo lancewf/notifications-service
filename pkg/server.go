@@ -9,62 +9,32 @@ import (
 
 	"github.com/lancewf/notifications-service/pkg/config"
 	"github.com/lancewf/notifications-service/pkg/inspec"
-	"github.com/lancewf/notifications-service/pkg/run"
 	log "github.com/sirupsen/logrus"
 )
 
 type NotificationReport interface {
 	HasNotificationToSend() bool
-	WebHookMessage() string
-	IFTTTWebHookMessage() string
-	SlackWebhookMessage() string
+	GetWebHookMessage() string
+	GetIFTTTWebHookMessage() string
+	GetSlackWebhookMessage() string
 }
 
 type Server struct {
-	config *config.NotificationsConfig
+	config  *config.NotificationsConfig
+	manager *inspec.Manager
 }
 
 func New(config *config.NotificationsConfig) Server {
 	log.Infof("Created server with %v", config)
 	return Server{
-		config: config,
+		config:  config,
+		manager: &inspec.Manager{},
 	}
 }
 
 func (server Server) Start() {
 	log.Infof("server.config.Inspec.MinImpact %f", server.config.Inspec.MinImpact)
-	mutexCCR := sync.Mutex{}
 	mutexInspec := sync.Mutex{}
-
-	http.HandleFunc("/ccr_runs", func(w http.ResponseWriter, r *http.Request) {
-		mutexCCR.Lock()
-		defer mutexCCR.Unlock()
-
-		if r.Method == "POST" {
-			log.Info("run POST")
-			body, err := ioutil.ReadAll(r.Body)
-			if err != nil {
-				log.WithError(err).Warn("Could not read body")
-				return
-			}
-
-			server.forwardToAutomate(body)
-			run := run.ParseRun(body)
-
-			server.sendNotification(run)
-
-			w.Header().Set("Content-Type", "application/javascript")
-			w.Write([]byte("{}"))
-		} else if r.Method == "GET" {
-
-			log.Info("run GET")
-
-			w.Header().Set("Content-Type", "application/javascript")
-			w.Write([]byte("{}"))
-		} else {
-			log.Info("Unhandled")
-		}
-	})
 
 	http.HandleFunc("/inspec_reports/data-collector/v0/", func(w http.ResponseWriter, r *http.Request) {
 		mutexInspec.Lock()
@@ -79,7 +49,7 @@ func (server Server) Start() {
 			}
 			server.forwardToAutomate(body)
 
-			report := inspec.ParseReport(body, server.config.Inspec.MinImpact)
+			report := server.manager.ParseReport(body, server.config.Inspec.MinImpact)
 			server.sendNotification(report)
 
 			w.Header().Set("Content-Type", "application/javascript")
@@ -123,7 +93,7 @@ func (server Server) sendNotification(report NotificationReport) {
 		if server.config.Webhook.URL != "" {
 			log.Infof("Send webhook alert")
 			_, err := http.Post(server.config.Webhook.URL,
-				"application/json", bytes.NewBuffer([]byte(report.WebHookMessage())))
+				"application/json", bytes.NewBuffer([]byte(report.GetWebHookMessage())))
 			if err != nil {
 				log.Error("Failed to send report")
 			}
@@ -132,7 +102,7 @@ func (server Server) sendNotification(report NotificationReport) {
 		if server.config.IFTTTWebhook.URL != "" {
 			log.Infof("Send IFTTT webhook alert")
 			_, err := http.Post(server.config.IFTTTWebhook.URL,
-				"application/json", bytes.NewBuffer([]byte(report.IFTTTWebHookMessage())))
+				"application/json", bytes.NewBuffer([]byte(report.GetIFTTTWebHookMessage())))
 			if err != nil {
 				log.Error("Failed to send report")
 			}
@@ -141,7 +111,7 @@ func (server Server) sendNotification(report NotificationReport) {
 		if server.config.SlackWebhook.URL != "" {
 			log.Infof("Send Slack webhook alert")
 			_, err := http.Post(server.config.SlackWebhook.URL,
-				"application/json", bytes.NewBuffer([]byte(report.SlackWebhookMessage())))
+				"application/json", bytes.NewBuffer([]byte(report.GetSlackWebhookMessage())))
 			if err != nil {
 				log.Error("Failed to send report")
 			}

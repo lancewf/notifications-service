@@ -5031,7 +5031,6 @@
 
   "node_uuid": "1234abcd-c628-4f82-86df-61c43866db6a",
   "report_uuid": "5678abcd-36d6-439e-ac70-a41504242605",
-  "job_uuid": "6789abcd-36d6-439e-ac70-a41504242605",
   "node_name": "My Uncompliant Node",
   "environment": "DevSec Prod Alpha",
   "roles": ["base_linux", "apache_linux", "linux-hardening-prod", "dot.role"],

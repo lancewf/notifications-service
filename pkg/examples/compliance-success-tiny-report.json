@@ -215,10 +215,8 @@
   "statistics": {
     "duration": 0.004522604
   },
-
   "node_uuid": "4567abcd-c628-4f82-86df-61c43866db6a",
   "report_uuid": "34567890-36d6-439e-ac70-a41504242605",
-  "job_uuid": "12345678-36d6-439e-ac70-a41504242605",
   "node_name": "My Compliant Node",
   "environment": "DevSec Prod Beta",
   "roles": ["base_linux", "apache_linux", "linux-hardening-prod", "dot.role"],
