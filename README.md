@@ -10,3 +10,20 @@ server_url = "http://localhost:8095/inspec_reports"
 token = 'none'
 user = 'none'
 ```
+
+
+Below is a example config.
+```
+[service]
+host = "localhost"
+port = 8095
+
+[ifttt_webhook]
+url = "https://maker.ifttt.com/trigger/inspec/with/key/fake"
+
+[slack_webhook]
+url = "https://hooks.slack.com/services/"
+
+[inspec]
+min_impact_to_notify = 0.7
+```
