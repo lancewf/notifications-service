@@ -27,3 +27,6 @@ url = "https://hooks.slack.com/services/"
 [inspec]
 min_impact_to_notify = 0.7
 ```
+
+Below is an example of the slack notifications. This is a notification of the failure and then a notification of the recovery. 
+![slack notification](images/failed_recovered_notifiations.png)
